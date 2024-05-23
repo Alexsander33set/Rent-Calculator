@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ReloadIcon } from "@radix-icons/vue";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -61,20 +63,23 @@ const viewHistory = ref(false);
 
 let saveRequestLoading = ref(false);
 const newRequest = ref({
-  energy: "",
-  water: "",
-  distribution: [1, 1],
-  variations: 0,
+  bills: {
+    energy: 0,
+    water: 0,
+    distribution: [1, 1],
+  },
+  additionalCosts: [],
   isPaid: false,
   date: Date.now(),
-  total: 0,
+  total: "",
 });
 
-//* REMOVE ====================
-localStorage.setItem(
-  "history",
-  JSON.stringify([newRequest.value, newRequest.value, newRequest.value])
-);
+let addCostTemplate = {
+  label: "",
+  value: "",
+};
+function addCost() {}
+function totalCosts() {}
 
 const saveRequest = () => {
   saveRequestLoading.value = true;
@@ -94,7 +99,7 @@ const saveRequest = () => {
     if (sameMonth(newRequest.value.date, request.date)) {
       console.log("sameMonth!");
     } else {
-      history.value.push(newRequest)
+      history.value.push(newRequest);
       toast({ title: "Sucessfully saved ✅" });
     }
   });
@@ -104,13 +109,35 @@ const saveRequest = () => {
 };
 
 const newRequestTotal = computed(() => {
-  let distribution = newRequest.value.distribution;
+  let { distribution } = newRequest.value.bills;
   // (Home, rented)
   let totalPersons = distribution[0] + distribution[1];
-  let homeExpenses = distribution[0] / totalPersons;
   let rentedExpenses = distribution[1] / totalPersons;
-  console.log(rentedExpenses);
-  return (newRequest.value.energy + newRequest.value.water) * rentedExpenses;
+  let expenses = (newRequest.value.energy + newRequest.value.water) * rentedExpenses;
+
+  return expenses + newRequest.value.variations;
+});
+
+let template = computed(() => {
+  let { energy, water } = newRequest.value.bills;
+  let labelOf = { energy: "energia", water: "água" };
+
+  /**
+   * template structure:
+   *
+   * bills with distribution
+   * other custs
+   * separator --------
+   * total (for ranted)
+   *
+   */
+
+  return `
+Água     ${water}\n
+Luz      ${energy}
+────────────
+*Total: ${newRequestTotal.value}*
+`;
 });
 </script>
 
@@ -157,64 +184,88 @@ const newRequestTotal = computed(() => {
             </AccordionItem>
           </Accordion>
         </CardContent>
-        <!-- <CardFooter></CardFooter> -->
       </Card>
     </template>
     <template v-else>
       <Card>
         <CardHeader>
-          <CardTitle>Rent Calculator</CardTitle>
-          <CardDescription>Calculate how much you need to charge</CardDescription>
+          <CardTitle>Calculadora de aluguel</CardTitle>
+          <CardDescription
+            >Preencha os dados a baixo e veja o quando deve ser cobrado</CardDescription
+          >
         </CardHeader>
-        <CardContent>
-          <div class="grid w-full max-w-sm items-center gap-1.5">
-            <Label for="water">Água: </Label>
-            <Input
-              id="water"
-              type="number"
-              v-model="newRequest.water"
-              placeholder="R$ 00.00"
-              class="max-w-xs"
-            />
-          </div>
-          <div class="grid w-full max-w-sm items-center gap-1.5">
-            <Label for="energy"> Luz: </Label>
-            <Input
-              id="energy"
-              type="number"
-              v-model="newRequest.energy"
-              placeholder="R$ 00.00"
-              class="col-span-3 max-w-xs"
-            />
-          </div>
-          <p class="py-4 text-base">Distribution</p>
-          <div class="flex gap-3">
-            <div class="flex max-w-sm items-center gap-1.5">
-              <Label>Home</Label>
+        <CardContent class="flex gap-2">
+          <div>
+            <div class="grid w-full max-w-sm items-center gap-1.5 pb-2">
+              <Label for="water">Água: </Label>
               <Input
-                id="residents"
+                id="water"
                 type="number"
-                v-model="newRequest.distribution[0]"
-                placeholder="1"
-                class="max-w-28"
+                v-model="newRequest.bills.water"
+                placeholder="R$ 00.00"
+                class="max-w-xs"
               />
             </div>
-            <div class="flex w-full max-w-sm items-center gap-1.5">
-              <Label>Rented</Label>
+            <div class="grid w-full max-w-sm items-center gap-1.5 pb-2">
+              <Label for="energy"> Luz: </Label>
               <Input
-                id="renteds"
+                id="energy"
                 type="number"
-                v-model="newRequest.distribution[1]"
-                placeholder="1"
-                class="max-w-28"
+                v-model="newRequest.bills.energy"
+                placeholder="R$ 00.00"
+                class="col-span-3 max-w-xs"
               />
             </div>
+            <p class="py-2 text-base">Distribuição por pessoas</p>
+            <div class="flex gap-3">
+              <div class="flex max-w-sm items-center gap-1.5">
+                <Label for="residents">Casa</Label>
+                <Input
+                  id="residents"
+                  type="number"
+                  v-model="newRequest.bills.distribution[0]"
+                  placeholder="1"
+                  class="max-w-28"
+                />
+              </div>
+              <div class="flex w-full max-w-sm items-center gap-1.5">
+                <Label for="renteds">Aluguel</Label>
+                <Input
+                  id="renteds"
+                  type="number"
+                  v-model="newRequest.bills.distribution[1]"
+                  placeholder="1"
+                  class="max-w-28"
+                />
+              </div>
+            </div>
+            <p class="py-2 text-base">Outros custos</p>
+            <div class="grid w-full max-w-sm items-center gap-1.5 pb-2">
+              <Label class="flex items-center gap-4">
+                <p>Variações</p>
+                <Input
+                  id="variations"
+                  type="number"
+                  v-model="newRequest.additionalCosts[0]"
+                  placeholder="R$ 00.00"
+                  class="col-span-3 max-w-xs"
+                />
+              </Label>
+            </div>
+          </div>
+          <div>
+            <Separator orientation="vertical" />
+          </div>
+          <div>
+            <Card class="bg-slate-200 p-4 text-pretty">
+              <Textarea v-model="template" disabled class="resize-none leading-normal" />
+            </Card>
           </div>
         </CardContent>
         <CardFooter>
           <div>
             <div class="grid w-full max-w-sm items-center gap-1.5">
-              <Label class="text-base" for="total"> Total Rent Expenses</Label>
+              <Label class="text-base" for="total"> Total Aluguel</Label>
               <Input
                 id="total"
                 type="text"

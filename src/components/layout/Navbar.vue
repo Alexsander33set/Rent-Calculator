@@ -39,6 +39,7 @@ function changeViewHistory() {
       <Button @click="changeViewHistory">{{
         modelValue ? "New Request" : "History"
       }}</Button>
+      <Button variant="outline">Dashboard</Button>
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
           <Button variant="outline">
