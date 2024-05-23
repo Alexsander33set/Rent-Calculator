@@ -1,5 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
+
+import formatDate from '@/utils/utils.js'
+
 //* shadcn components
 import { Icon } from "@iconify/vue";
 import { Input } from "@/components/ui/input";
@@ -39,24 +42,6 @@ const { toast } = useToast();
 
 //* custom components
 import Navbar from "@/components/layout/Navbar.vue";
-
-const formatDate = (dateFormat, date = new Date()) => {
-  let inputDate = new Date(date);
-  if (dateFormat === "mm/yy") {
-    // format mm/yy
-    return inputDate.toLocaleDateString(undefined, {
-      month: "2-digit",
-      year: "2-digit",
-    });
-  } else if (dateFormat === "long-noDay") {
-    return inputDate.toLocaleDateString(undefined, {
-      month: "long",
-      year: "numeric",
-    });
-  } else {
-    return inputDate.toLocaleDateString();
-  }
-};
 
 const history = ref(JSON.parse(localStorage.getItem("history")));
 const viewHistory = ref(false);
@@ -257,7 +242,7 @@ Luz      ${energy}
             <Separator orientation="vertical" />
           </div>
           <div>
-            <Card class="bg-slate-200 p-4 text-pretty">
+            <Card class="p-4 text-pretty">
               <Textarea v-model="template" disabled class="resize-none leading-normal" />
             </Card>
           </div>
@@ -276,13 +261,14 @@ Luz      ${energy}
               />
             </div>
             <div class="pt-8 flex items-center gap-1.5">
-              <Button @click="saveRequest" variant="outline" class="max-w-24">
+              <Button @click="saveRequest" variant="outline">
                 <template v-if="!saveRequestLoading"> Save </template>
                 <template v-else>
                   <ReloadIcon class="w-4 h-4 mr-2 animate-spin" />
                 </template>
               </Button>
-              <Button class="max-w-24">Export</Button>
+              <Button @click="saveRequestLoading = !saveRequestLoading">saveRequestLoading</Button>
+              <Button @click="console.log('show zap export')">Export to WhatsApp</Button>
             </div>
           </div>
         </CardFooter>
