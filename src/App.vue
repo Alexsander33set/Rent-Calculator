@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 
-import formatDate from '@/utils/utils.js'
+import formatDate from "@/utils/utils.js";
 
 //* shadcn components
 import { Icon } from "@iconify/vue";
@@ -94,13 +94,13 @@ const saveRequest = () => {
 };
 
 const newRequestTotal = computed(() => {
-  let { distribution } = newRequest.value.bills;
+  let { distribution, energy, water } = newRequest.value.bills;
   // (Home, rented)
   let totalPersons = distribution[0] + distribution[1];
   let rentedExpenses = distribution[1] / totalPersons;
-  let expenses = (newRequest.value.energy + newRequest.value.water) * rentedExpenses;
-
-  return expenses + newRequest.value.variations;
+  let expenses = (energy + water) * rentedExpenses;
+  
+  return expenses;
 });
 
 let template = computed(() => {
@@ -118,8 +118,10 @@ let template = computed(() => {
    */
 
   return `
-Água     ${water}\n
+────────────
+*Contas*
 Luz      ${energy}
+Água     ${water}
 ────────────
 *Total: ${newRequestTotal.value}*
 `;
@@ -243,7 +245,12 @@ Luz      ${energy}
           </div>
           <div>
             <Card class="p-4 text-pretty">
-              <Textarea v-model="template" disabled class="resize-none leading-normal" />
+              <Textarea
+                v-model="template"
+                disabled
+                class="resize-none leading-normal border-0"
+                rows="10"
+              />
             </Card>
           </div>
         </CardContent>
@@ -267,7 +274,9 @@ Luz      ${energy}
                   <ReloadIcon class="w-4 h-4 mr-2 animate-spin" />
                 </template>
               </Button>
-              <Button @click="saveRequestLoading = !saveRequestLoading">saveRequestLoading</Button>
+              <Button @click="saveRequestLoading = !saveRequestLoading"
+                >saveRequestLoading</Button
+              >
               <Button @click="console.log('show zap export')">Export to WhatsApp</Button>
             </div>
           </div>
