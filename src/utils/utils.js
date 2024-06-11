@@ -1,22 +1,30 @@
+import { useToast } from '@/components/ui/toast/use-toast'
+const { toast } = useToast()
 
-const formatDate = (dateFormat, date = new Date()) => {
-  let inputDate = new Date(date);
-  if (dateFormat === "mm/yy") {
+export const formatDate = (dateFormat, date = new Date()) => {
+  let inputDate = new Date(date)
+  if (dateFormat === 'mm/yy') {
     // format mm/yy
     return inputDate.toLocaleDateString(undefined, {
-      month: "2-digit",
-      year: "2-digit",
-    });
-  } else if (dateFormat === "long-noDay") {
+      month: '2-digit',
+      year: '2-digit'
+    })
+  } else if (dateFormat === 'long-noDay') {
     return inputDate.toLocaleDateString(undefined, {
-      month: "long",
-      year: "numeric",
-    });
+      month: 'long',
+      year: 'numeric'
+    })
   } else {
-    return inputDate.toLocaleDateString();
+    return inputDate.toLocaleDateString()
   }
-};
+}
 
+export const compareMonth = (dateOne, dateTwo) => {
+  return !!formatDate('mm/yy', dateOne) == formatDate('mm/yy', dateTwo)
+}
 
-
-export default formatDate;
+export function copyToClipClipboard(value) {
+  navigator.clipboard.writeText(value).then(() => {
+    toast({ title: 'Copiado! ✅' })
+  })
+}

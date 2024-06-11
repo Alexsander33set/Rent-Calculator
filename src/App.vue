@@ -1,8 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
 
-import formatDate from "@/utils/utils.js";
-
 //* shadcn components
 import { Icon } from "@iconify/vue";
 import { Input } from "@/components/ui/input";
@@ -46,8 +44,10 @@ import { useToast } from "@/components/ui/toast/use-toast";
 import Toaster from "@/components/ui/toast/Toaster.vue";
 const { toast } = useToast();
 
-//* custom components
+//* ||====================================||====================================||
+
 import Navbar from "@/components/layout/Navbar.vue";
+import { formatDate, compareMonth, copyToClipClipboard } from "@/utils/utils.js";
 
 const history = ref(JSON.parse(localStorage.getItem("history")));
 const viewHistory = ref(false);
