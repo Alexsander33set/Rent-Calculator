@@ -52,7 +52,6 @@ import { formatDate, compareMonth, copyToClipClipboard } from "@/utils/utils.js"
 const history = ref(JSON.parse(localStorage.getItem("history")));
 const viewHistory = ref(false);
 
-let saveRequestLoading = ref(false);
 const newRequest = ref({
   bills: {
     energy: 0,
@@ -64,34 +63,43 @@ const newRequest = ref({
   date: Date.now(),
   total: "",
 });
+let saveRequestLoading = ref(false);
+let additionalCostsSize = ref(newRequest.value.additionalCosts.length);
+const newRequestTotal = computed(() => {
+  let { distribution, energy, water } = newRequest.value.bills;
 
-let addCostTemplate = {
-  label: "",
-  value: "",
-};
-function addCost() {}
-function totalCosts() {}
+  let expenses = 0;
+  let rentedExpenses = distribution[1] / (distribution[0] + distribution[1]);
 
+  try {
+    expenses = ((energy + water) * rentedExpenses + totalCosts()).toFixed(2);
+  } catch (err) {
+    console.error(err);
+  }
+  return expenses || 0;
+});
 const saveRequest = () => {
   saveRequestLoading.value = true;
-  let sameMonth = (dateOne, dateTwo) => {
-    console.log(!!formatDate("mm/yy", dateOne) === formatDate("mm/yy", dateTwo));
-    return !!formatDate("mm/yy", dateOne) === formatDate("mm/yy", dateTwo);
-  };
 
   //* Validar campos, verificar se já existe, caso sim avisar e pedir certeza
   if (!history.value) {
     history.value = [];
-    console.log("No history registered at localStorage ");
+    toast({
+      title: "⚠️ Nenhum histórico encontrado!",
+      description: "Estamos criando um novo para você...",
+    });
   }
 
   history.value.forEach((request, index) => {
-    console.log(index);
-    if (sameMonth(newRequest.value.date, request.date)) {
-      console.log("sameMonth!");
+    if (compareMonth(newRequest.value.date, request.date)) {
+      toast({
+        title: "O aluguel deste mês já foi salvo!",
+        description: "Delete o anterior ou clique novamente para sobrescreve-lo.",
+      });
     } else {
       history.value.push(newRequest);
-      toast({ title: "Sucessfully saved ✅" });
+      toast({ title: "✅ Contas salvas com sucesso!" });
+      saveRequestLoading.value = false;
     }
   });
 
@@ -99,46 +107,258 @@ const saveRequest = () => {
   // localStorage.setItem("history", JSON.stringify(getHistory));
 };
 
-const newRequestTotal = computed(() => {
-  let { distribution, energy, water } = newRequest.value.bills;
-  // (Home, rented)
-  let totalPersons = distribution[0] + distribution[1];
-  let rentedExpenses = distribution[1] / totalPersons;
-  let expenses = (energy + water) * rentedExpenses;
-  
-  return expenses;
-});
+let sideNav = ref([
+  {
+    tootip: "Exportar para WhatsApp",
+    icon: "mdi:whatsapp",
+    color: "",
+    isOpen: false,
+  },
+]);
+
+let costs = ref(newRequest.value.additionalCosts);
+let costTemplate = {
+  label: "",
+  value: "",
+  onEdit: true,
+};
+function addCost() {
+  costs.value.push({ ...costTemplate });
+}
+function removeCost(index) {
+  costs.value.splice(index, 1);
+}
+function alternateEditCost(index) {
+  costs.value[index].onEdit = !costs.value[index].onEdit;
+}
+function totalCosts() {
+  let totalCosts = 0;
+
+  if (additionalCostsSize === 0) {
+    return 0;
+  }
+
+  for (const cost of costs.value) {
+    totalCosts += cost.value;
+  }
+  return Number(totalCosts);
+}
 
 let template = computed(() => {
-  let { energy, water } = newRequest.value.bills;
-  let labelOf = { energy: "energia", water: "água" };
+  const separator = "────────────";
 
-  /**
-   * template structure:
-   *
-   * bills with distribution
-   * other custs
-   * separator --------
-   * total (for ranted)
-   *
-   */
+  const costsTemplate = () => {
+    let costsTitle = "*Custos adicionais*\n";
+    let inlineCosts = "";
 
-  return `
-────────────
-*Contas*
-Luz      ${energy}
-Água     ${water}
-────────────
-*Total: ${newRequestTotal.value}*
-`;
+    for (let cost of costs.value) {
+      inlineCosts += `${cost.label}: ${cost.value.toFixed(2)}\n`;
+    }
+    if (additionalCostsSize) {
+      return costsTitle + inlineCosts + separator + "\n";
+    } else {
+      return "";
+    }
+  };
+
+  const billsTemplate = () => {
+    let { energy, water } = newRequest.value.bills;
+
+    return `*Contas*
+Luz      ${energy.toFixed(2)}
+Água   ${water.toFixed(2)}
+${separator}
+*Total: ${newRequestTotal.value}*`;
+  };
+
+  return costsTemplate() + billsTemplate();
 });
+
+// Notification.requestPermission().then((res) => {
+//   new Notification("App Started", {});
+// });
 </script>
 
 <template>
   <Navbar v-model="viewHistory" />
   <main class="container pt-4">
-    <template v-if="viewHistory">
-      <div class="py-4 text-2xl">History</div>
+    <template v-if="!viewHistory">
+      <Card>
+        <CardHeader>
+          <CardTitle>Calculadora de aluguel</CardTitle>
+          <CardDescription
+            >Preencha os dados a baixo e veja o quando deve ser cobrado</CardDescription
+          >
+        </CardHeader>
+        <CardContent class="flex gap-2">
+          <div>
+            <div class="grid w-full max-w-sm items-center gap-1.5 pb-2">
+              <Label for="energy"> Luz: </Label>
+              <Input
+                id="energy"
+                type="number"
+                v-model="newRequest.bills.energy"
+                placeholder="R$ 00.00"
+                class="col-span-3 max-w-xs"
+              />
+            </div>
+            <div class="grid w-full max-w-sm items-center gap-1.5 pb-2">
+              <Label for="water">Água: </Label>
+              <Input
+                id="water"
+                type="number"
+                v-model="newRequest.bills.water"
+                placeholder="R$ 00.00"
+                class="max-w-xs"
+              />
+            </div>
+            <p class="py-2 text-base">Distribuição por pessoas</p>
+            <div class="flex gap-3">
+              <div class="flex max-w-sm items-center gap-1.5">
+                <Label for="residents">Casa</Label>
+                <Input
+                  id="residents"
+                  type="number"
+                  v-model="newRequest.bills.distribution[0]"
+                  placeholder="1"
+                  class="max-w-28"
+                />
+              </div>
+              <div class="flex w-full max-w-sm items-center gap-1.5">
+                <Label for="renteds">Aluguel</Label>
+                <Input
+                  id="renteds"
+                  type="number"
+                  v-model="newRequest.bills.distribution[1]"
+                  placeholder="1"
+                  class="max-w-28"
+                />
+              </div>
+            </div>
+            <div class="grid w-full max-w-sm items-center gap-1.5 pb-2 mt-1">
+              <p class="pt-2 text-base">Outros custos</p>
+              <div
+                class="flex items-center gap-2"
+                v-for="(cost, index) in newRequest.additionalCosts"
+                :key="index"
+              >
+                <template v-if="cost.onEdit">
+                  <Input type="text" v-model="cost.label" placeholder="Descrição" />
+                  <Input
+                    id=""
+                    type="number"
+                    v-model="cost.value"
+                    placeholder="R$ 00.00"
+                    class="col-span-3 max-w-xs"
+                  />
+                  <Button
+                    @click="alternateEditCost(index)"
+                    variant="outline"
+                    size="icon"
+                    class="aspect-square"
+                  >
+                    <Icon icon="mdi-check" />
+                  </Button>
+                </template>
+                <template v-else> {{ cost.label }}: {{ cost.value }} </template>
+
+                <Button
+                  @click="removeCost(index)"
+                  variant="outline"
+                  size="icon"
+                  class="aspect-square"
+                >
+                  <Icon icon="mdi-close" />
+                </Button>
+              </div>
+              <Button @click="addCost">Adicionar custos</Button>
+            </div>
+          </div>
+          <div class="flex">
+            <Separator class="w-0.5" orientation="vertical" />
+          </div>
+          <div class="flex flex-col gap-1 p-4">
+            <TooltipProvider v-for="(item, i) in sideNav" :key="i">
+              <Tooltip :delayDuration="300">
+                <TooltipTrigger as-child>
+                  <Button
+                    size="icon"
+                    @click="item.isOpen = !item.isOpen"
+                    :variant="item.isOpen ? 'outline' : ''"
+                  >
+                    <Icon class="size-5" :icon="item.icon"></Icon>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{{ item.tootip }}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div class="relative">
+            <template v-if="sideNav[0].isOpen">
+              <Card class="p-4 text-pretty">
+                <TooltipProvider>
+                  <Tooltip :delayDuration="300">
+                    <TooltipTrigger as-child>
+                      <Button
+                        @click="copyToClipClipboard(template)"
+                        size="icon"
+                        class="absolute right-4 z-10"
+                      >
+                        <Icon icon="mdi:content-copy" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copiar</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Textarea
+                  v-model="template"
+                  class="resize-none leading-normal border-none"
+                  :rows="8 + additionalCostsSize"
+                />
+              </Card>
+            </template>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <div>
+            <div class="grid w-full max-w-sm items-center gap-1.5">
+              <Label class="text-base" for="total"> Total Aluguel</Label>
+              <Input
+                id="total"
+                type="text"
+                v-model="newRequestTotal"
+                placeholder="Total"
+                disabled
+                class="col-span-3 max-w-xs"
+              />
+            </div>
+            <div class="pt-8 flex items-center gap-1.5">
+              <TooltipProvider>
+                <Tooltip :delayDuration="300">
+                  <TooltipTrigger as-child>
+                    <Button @click="saveRequest" variant="outline">
+                      <template v-if="!saveRequestLoading"> Salvar </template>
+                      <template v-else>
+                        <ReloadIcon class="w-4 h-4 mr-2 animate-spin" />
+                      </template>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Salvar contas deste mês</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </CardFooter>
+      </Card>
+    </template>
+    <template v-else>
+      <CardTitle class="py-4 text-2xl">Histórico</CardTitle>
       <Card v-for="(month, index) in history" :key="index" class="mb-4">
         <CardContent class="flex gap-1 p-4">
           <Accordion class="flex-grow" type="single" collapsible>
@@ -172,121 +392,11 @@ Luz      ${energy}
               </AccordionTrigger>
 
               <AccordionContent>
-                Yes. It adheres to the WAI-ARIA design pattern.
+                {{ month }}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
         </CardContent>
-      </Card>
-    </template>
-    <template v-else>
-      <Card>
-        <CardHeader>
-          <CardTitle>Calculadora de aluguel</CardTitle>
-          <CardDescription
-            >Preencha os dados a baixo e veja o quando deve ser cobrado</CardDescription
-          >
-        </CardHeader>
-        <CardContent class="flex gap-2">
-          <div>
-            <div class="grid w-full max-w-sm items-center gap-1.5 pb-2">
-              <Label for="water">Água: </Label>
-              <Input
-                id="water"
-                type="number"
-                v-model="newRequest.bills.water"
-                placeholder="R$ 00.00"
-                class="max-w-xs"
-              />
-            </div>
-            <div class="grid w-full max-w-sm items-center gap-1.5 pb-2">
-              <Label for="energy"> Luz: </Label>
-              <Input
-                id="energy"
-                type="number"
-                v-model="newRequest.bills.energy"
-                placeholder="R$ 00.00"
-                class="col-span-3 max-w-xs"
-              />
-            </div>
-            <p class="py-2 text-base">Distribuição por pessoas</p>
-            <div class="flex gap-3">
-              <div class="flex max-w-sm items-center gap-1.5">
-                <Label for="residents">Casa</Label>
-                <Input
-                  id="residents"
-                  type="number"
-                  v-model="newRequest.bills.distribution[0]"
-                  placeholder="1"
-                  class="max-w-28"
-                />
-              </div>
-              <div class="flex w-full max-w-sm items-center gap-1.5">
-                <Label for="renteds">Aluguel</Label>
-                <Input
-                  id="renteds"
-                  type="number"
-                  v-model="newRequest.bills.distribution[1]"
-                  placeholder="1"
-                  class="max-w-28"
-                />
-              </div>
-            </div>
-            <p class="py-2 text-base">Outros custos</p>
-            <div class="grid w-full max-w-sm items-center gap-1.5 pb-2">
-              <Label class="flex items-center gap-4">
-                <p>Variações</p>
-                <Input
-                  id="variations"
-                  type="number"
-                  v-model="newRequest.additionalCosts[0]"
-                  placeholder="R$ 00.00"
-                  class="col-span-3 max-w-xs"
-                />
-              </Label>
-            </div>
-          </div>
-          <div>
-            <Separator orientation="vertical" />
-          </div>
-          <div>
-            <Card class="p-4 text-pretty">
-              <Textarea
-                v-model="template"
-                disabled
-                class="resize-none leading-normal border-0"
-                rows="10"
-              />
-            </Card>
-          </div>
-        </CardContent>
-        <CardFooter>
-          <div>
-            <div class="grid w-full max-w-sm items-center gap-1.5">
-              <Label class="text-base" for="total"> Total Aluguel</Label>
-              <Input
-                id="total"
-                type="text"
-                v-model="newRequestTotal"
-                placeholder="Total"
-                disabled
-                class="col-span-3 max-w-xs"
-              />
-            </div>
-            <div class="pt-8 flex items-center gap-1.5">
-              <Button @click="saveRequest" variant="outline">
-                <template v-if="!saveRequestLoading"> Save </template>
-                <template v-else>
-                  <ReloadIcon class="w-4 h-4 mr-2 animate-spin" />
-                </template>
-              </Button>
-              <Button @click="saveRequestLoading = !saveRequestLoading"
-                >saveRequestLoading</Button
-              >
-              <Button @click="console.log('show zap export')">Export to WhatsApp</Button>
-            </div>
-          </div>
-        </CardFooter>
       </Card>
     </template>
   </main>
