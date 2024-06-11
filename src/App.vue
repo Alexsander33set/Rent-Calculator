@@ -72,7 +72,7 @@ const newRequestTotal = computed(() => {
   let rentedExpenses = distribution[1] / (distribution[0] + distribution[1]);
 
   try {
-    expenses = ((energy + water) * rentedExpenses + totalCosts()).toFixed(2);
+    expenses = Number(((energy + water) * rentedExpenses) + totalCosts()).toFixed(2);
   } catch (err) {
     console.error(err);
   }
@@ -152,7 +152,7 @@ let template = computed(() => {
     let inlineCosts = "";
 
     for (let cost of costs.value) {
-      inlineCosts += `${cost.label}: ${cost.value.toFixed(2)}\n`;
+      inlineCosts += `${cost.label}: ${Number(cost.value).toFixed(2)}\n`;
     }
     if (additionalCostsSize) {
       return costsTitle + inlineCosts + separator + "\n";
@@ -165,8 +165,8 @@ let template = computed(() => {
     let { energy, water } = newRequest.value.bills;
 
     return `*Contas*
-Luz      ${energy.toFixed(2)}
-Água   ${water.toFixed(2)}
+Luz      ${Number(energy).toFixed(2)}
+Água   ${Number(water).toFixed(2)}
 ${separator}
 *Total: ${newRequestTotal.value}*`;
   };
