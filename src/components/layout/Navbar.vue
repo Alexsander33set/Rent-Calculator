@@ -9,8 +9,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  // DropdownMenuLabel,
-  // DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -22,7 +20,6 @@ const props = defineProps({
     required: true,
   },
 });
-console.log(props.modelValue);
 function changeViewHistory() {
   emit("update:modelValue", !props.modelValue);
 }
@@ -36,10 +33,10 @@ function changeViewHistory() {
       Rent Calculator
     </h1>
     <nav class="flex items-center space-x-4">
-      <Button @click="changeViewHistory">{{
-        modelValue ? "New Request" : "History"
-      }}</Button>
-      <Button variant="outline">Dashboard</Button>
+      <Button @click="changeViewHistory">
+        {{ modelValue ? "Nova Solicitação" : "Histórico" }}
+      </Button>
+      <!-- <Button variant="outline">Dashboard</Button> -->
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
           <Button variant="outline">
@@ -55,9 +52,9 @@ function changeViewHistory() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem @click="mode = 'light'"> Light </DropdownMenuItem>
-          <DropdownMenuItem @click="mode = 'dark'"> Dark </DropdownMenuItem>
-          <DropdownMenuItem @click="mode = 'auto'"> System </DropdownMenuItem>
+          <DropdownMenuItem @click="mode = 'light'">Claro</DropdownMenuItem>
+          <DropdownMenuItem @click="mode = 'dark'">Escudo</DropdownMenuItem>
+          <DropdownMenuItem @click="mode = 'auto'">Padrão</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </nav>
