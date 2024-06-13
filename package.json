@@ -9,7 +9,7 @@
     "dev": "vite",
     "build": "vite build",
     "start": "electron .",
-    "package": "npx @electron/packager . Rent_Calculator",
+    "package": "npx @electron/packager . Rent_Calculator --overwrite",
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "format": "prettier --write src/"
