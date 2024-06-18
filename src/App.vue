@@ -1,7 +1,7 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 
-//* shadcn components
+//* ||=======================| Shadcn |=======================||
 import { Icon } from "@iconify/vue";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,37 +9,14 @@ import { Button } from "@/components/ui/button";
 import { ReloadIcon } from "@radix-icons/vue";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import {Card,CardContent,CardDescription,CardFooter,CardHeader,CardTitle}
+from "@/components/ui/card";
+import {Accordion,AccordionContent,AccordionItem,AccordionTrigger}
+from "@/components/ui/accordion";
+import {AlertDialog,AlertDialogAction,AlertDialogCancel,AlertDialogContent,AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle,AlertDialogTrigger}
+from "@/components/ui/alert-dialog";
+import {Tooltip,TooltipContent,TooltipProvider,TooltipTrigger}
+from "@/components/ui/tooltip";
 import { useToast } from "@/components/ui/toast/use-toast";
 import Toaster from "@/components/ui/toast/Toaster.vue";
 const { toast } = useToast();
@@ -49,8 +26,18 @@ const { toast } = useToast();
 import Navbar from "@/components/layout/Navbar.vue";
 import { formatDate, compareMonth, copyToClipClipboard } from "@/utils/utils.js";
 
+//* ||=======================| History |=======================||
+
 const history = ref(JSON.parse(localStorage.getItem("history")));
 const viewHistory = ref(false);
+
+watch(history.value, async (newData) => {
+  localStorage.setItem("history", newData.value)
+})
+//* TODO: If not in the history?
+//* TODO: If not finded..?
+
+//* ||=======================| New Request |=======================||
 
 const newRequest = ref({
   bills: {
@@ -88,6 +75,13 @@ const saveRequest = () => {
       title: "⚠️ Nenhum histórico encontrado!",
       description: "Estamos criando um novo para você...",
     });
+    localStorage.setItem("history", JSON.stringify({...newRequest.value}))
+    if (!history.value){
+      toast({
+      title: "❌ Falha ao criar um histórico!",
+      description: "Contacte um admistrador...",
+    });
+    }
   }
 
   history.value.forEach((request, index) => {
@@ -106,15 +100,11 @@ const saveRequest = () => {
   // getHistory.push(newRequest);
   // localStorage.setItem("history", JSON.stringify(getHistory));
 };
+const deleteRequest = (index) =>{
+  history.value.splice(index, 1)
+}
 
-let sideNav = ref([
-  {
-    tootip: "Exportar para WhatsApp",
-    icon: "mdi:whatsapp",
-    color: "",
-    isOpen: false,
-  },
-]);
+//* ||=======================| New Request - Costs |=======================||
 
 let costs = ref(newRequest.value.additionalCosts);
 let costTemplate = {
@@ -144,6 +134,16 @@ function totalCosts() {
   return Number(totalCosts);
 }
 
+//* ||=======================| New Request - side functions |=======================||
+
+let sideNav = ref([
+  {
+    tootip: "Exportar para WhatsApp",
+    icon: "mdi:whatsapp",
+    color: "",
+    isOpen: false,
+  },
+]);
 let template = computed(() => {
   const separator = "────────────";
 
@@ -174,6 +174,7 @@ ${separator}
   return costsTemplate() + billsTemplate();
 });
 
+
 // Notification.requestPermission().then((res) => {
 //   new Notification("App Started", {});
 // });
@@ -186,9 +187,7 @@ ${separator}
       <Card>
         <CardHeader>
           <CardTitle>Calculadora de aluguel</CardTitle>
-          <CardDescription
-            >Preencha os dados a baixo e veja o quando deve ser cobrado</CardDescription
-          >
+          <CardDescription>Preencha os dados a baixo e veja o quando deve ser cobrado</CardDescription>
         </CardHeader>
         <CardContent class="flex gap-2">
           <div>
@@ -199,8 +198,7 @@ ${separator}
                 type="number"
                 v-model="newRequest.bills.energy"
                 placeholder="R$ 00.00"
-                class="col-span-3 max-w-xs"
-              />
+                class="col-span-3 max-w-xs"/>
             </div>
             <div class="grid w-full max-w-sm items-center gap-1.5 pb-2">
               <Label for="water">Água: </Label>
@@ -209,8 +207,7 @@ ${separator}
                 type="number"
                 v-model="newRequest.bills.water"
                 placeholder="R$ 00.00"
-                class="max-w-xs"
-              />
+                class="max-w-xs"/>
             </div>
             <p class="py-2 text-base">Distribuição por pessoas</p>
             <div class="flex gap-3">
@@ -221,8 +218,7 @@ ${separator}
                   type="number"
                   v-model="newRequest.bills.distribution[0]"
                   placeholder="1"
-                  class="max-w-28"
-                />
+                  class="max-w-28"/>
               </div>
               <div class="flex w-full max-w-sm items-center gap-1.5">
                 <Label for="renteds">Aluguel</Label>
@@ -231,8 +227,7 @@ ${separator}
                   type="number"
                   v-model="newRequest.bills.distribution[1]"
                   placeholder="1"
-                  class="max-w-28"
-                />
+                  class="max-w-28"/>
               </div>
             </div>
             <div class="grid w-full max-w-sm items-center gap-1.5 pb-2 mt-1">
@@ -240,8 +235,7 @@ ${separator}
               <div
                 class="flex items-center gap-2"
                 v-for="(cost, index) in newRequest.additionalCosts"
-                :key="index"
-              >
+                :key="index">
                 <template v-if="cost.onEdit">
                   <Input type="text" v-model="cost.label" placeholder="Descrição" />
                   <Input
@@ -249,25 +243,21 @@ ${separator}
                     type="number"
                     v-model="cost.value"
                     placeholder="R$ 00.00"
-                    class="col-span-3 max-w-xs"
-                  />
+                    class="col-span-3 max-w-xs"/>
                   <Button
                     @click="alternateEditCost(index)"
                     variant="outline"
                     size="icon"
-                    class="aspect-square"
-                  >
+                    class="aspect-square">
                     <Icon icon="mdi-check" />
                   </Button>
                 </template>
                 <template v-else> {{ cost.label }}: {{ cost.value }} </template>
-
                 <Button
                   @click="removeCost(index)"
                   variant="outline"
                   size="icon"
-                  class="aspect-square"
-                >
+                  class="aspect-square">
                   <Icon icon="mdi-close" />
                 </Button>
               </div>
@@ -284,8 +274,7 @@ ${separator}
                   <Button
                     size="icon"
                     @click="item.isOpen = !item.isOpen"
-                    :variant="item.isOpen ? 'outline' : ''"
-                  >
+                    :variant="item.isOpen ? 'outline' : ''">
                     <Icon class="size-5" :icon="item.icon"></Icon>
                   </Button>
                 </TooltipTrigger>
@@ -304,8 +293,7 @@ ${separator}
                       <Button
                         @click="copyToClipClipboard(template)"
                         size="icon"
-                        class="absolute right-4 z-10"
-                      >
+                        class="absolute right-4 z-10">
                         <Icon icon="mdi:content-copy" />
                       </Button>
                     </TooltipTrigger>
@@ -317,8 +305,7 @@ ${separator}
                 <Textarea
                   v-model="template"
                   class="resize-none leading-normal border-none"
-                  :rows="8 + additionalCostsSize"
-                />
+                  :rows="8 + additionalCostsSize"/>
               </Card>
             </template>
           </div>
@@ -333,8 +320,7 @@ ${separator}
                 v-model="newRequestTotal"
                 placeholder="Total"
                 disabled
-                class="col-span-3 max-w-xs"
-              />
+                class="col-span-3 max-w-xs"/>
             </div>
             <div class="pt-8 flex items-center gap-1.5">
               <TooltipProvider>
@@ -369,28 +355,22 @@ ${separator}
                 >
                 <div class="ml-auto flex-none">
                   <AlertDialog>
-                    <AlertDialogTrigger
-                      ><Icon icon="radix-icons:cross-1"
-                    /></AlertDialogTrigger>
+                    <AlertDialogTrigger><Icon icon="radix-icons:cross-1"/></AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete your
-                          data relating to {{ "month TalTal" }}.
+                            Este processo não pode ser desfeito. Os dados relacionados a {{formatDate("long-noDay", month.date)}} serão permanentemente deletados.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction @click="console.log('closed')"
-                          >Continue</AlertDialogAction
-                        >
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction @click="deleteRequest(index)">Continuar</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
               </AccordionTrigger>
-
               <AccordionContent>
                 {{ month }}
               </AccordionContent>
