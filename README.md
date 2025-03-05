@@ -1,35 +1,53 @@
-# Rent Calculator
+# Rent Calculator 🏠💰
 
-This template should help get you started developing with Vue 3 in Vite.
+O **Rent Calculator** é uma aplicação de desktop desenvolvida com Vue 3 e Vite, projetada para facilitar o cálculo e a divisão de aluguéis e despesas entre os moradores de uma residência. Esta ferramenta visa simplificar a gestão financeira em moradias compartilhadas, como repúblicas e apartamentos coletivos.
 
-## Recommended IDE Setup
+## ✨ Funcionalidades
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Divisão de Aluguel e Despesas:** Permite calcular a divisão justa do aluguel e outras despesas mensais entre os moradores.
+- **Interface Intuitiva:** Oferece uma interface amigável que facilita a inserção de dados e a visualização dos resultados.
+- **Responsividade:** Adaptável a diferentes tamanhos de tela, garantindo uma experiência consistente em diversos dispositivos.
 
-## Customize configuration
+## 🛠️ Tecnologias Utilizadas
 
-See [Vite Configuration Reference](https://vitejs.dev/config/).
+- **Linguagem:** JavaScript
+- **Framework Frontend:** Vue 3
+- **Empacotador de Módulos:** Vite
+- **Estilização:** Tailwind CSS
+- **Controle de Versão:** Git
 
-## Project Setup
+## 🚀 Como Usar
 
-```sh
-npm install
-```
+1. **Clone o Repositório:**
+   ```bash
+   git clone https://github.com/Alexsander33set/Rent-Calculator.git
+   ```
+2. **Navegue até o Diretório do Projeto:**
+   ```bash
+   cd Rent-Calculator
+   ```
+3. **Instale as Dependências:**
+   ```bash
+   npm install
+   ```
+4. **Execute a Aplicação em Ambiente de Desenvolvimento:**
+   ```bash
+   npm run dev
+   ```
+5. **Compile para Produção:**
+   ```bash
+   npm run build
+   ```
 
-### Compile and Hot-Reload for Development
+## 📂 Estrutura do Projeto
 
-```sh
-npm run dev
-```
+- **`src/`**: Contém os arquivos fonte da aplicação.
+  - **`components/`**: Componentes Vue reutilizáveis.
+  - **`assets/`**: Recursos estáticos como imagens e estilos.
+- **`public/`**: Arquivos públicos que não passam pelo processo de build.
+- **`index.html`**: Página HTML principal.
+- **`main.js`**: Arquivo de entrada da aplicação Vue.
 
-### Compile and Minify for Production
+## 🤝 Contribuições
 
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests no repositório.
